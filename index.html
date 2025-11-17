@@ -2,10 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My Google Drive Journal</title>
+  <title>VentScript – Journal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f172a" />
 
-  <!-- Google APIs (same pattern as NoteCards: global onload hooks) -->
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- App icons (you’ll create these, see SVG at bottom) -->
+  <link rel="icon" type="image/svg+xml" href="ventscript-logo.svg" />
+  <link rel="apple-touch-icon" href="icons/ventscript-192.png" />
+
+  <!-- Google Fonts: cursive for headings, soft sans for body -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@300;400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Google APIs (same pattern as NoteCards) -->
   <script
     src="https://apis.google.com/js/api.js"
     async
@@ -21,26 +35,30 @@
 
   <style>
     :root {
-      --bg: #f3f4f6;
-      --bg-elevated: #ffffff;
-      --accent: #3b82f6;
-      --accent-soft: rgba(59, 130, 246, 0.08);
-      --text: #111827;
-      --text-muted: #6b7280;
-      --border: #e5e7eb;
+      --bg: linear-gradient(145deg, #e0f4ff, #fff7e5);
+      --bg-solid: #f5fafc;
+      --bg-elevated: #fbf5ee;
+      --accent: #22b5e6;
+      --accent-soft: rgba(34, 181, 230, 0.12);
+      --accent-strong: #f59e0b;
+      --text: #083344;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
       --danger: #b91c1c;
-      --radius-lg: 16px;
-      --radius-xl: 22px;
-      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.15);
-      --editor-bg: #f9fafb;
+      --radius-lg: 18px;
+      --radius-xl: 26px;
+      --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.2);
+      --editor-bg: #fdf7ee;
     }
 
     body[data-theme="dark"] {
-      --bg: #020617;
-      --bg-elevated: #020617;
+      --bg: radial-gradient(circle at top, #0f172a, #020617);
+      --bg-solid: #020617;
+      --bg-elevated: rgba(15, 23, 42, 0.98);
       --accent: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.15);
-      --text: #e5e7eb;
+      --accent-soft: rgba(56, 189, 248, 0.16);
+      --accent-strong: #fb923c;
+      --text: #f9fafb;
       --text-muted: #9ca3af;
       --border: #1f2937;
       --danger: #f97373;
@@ -48,14 +66,24 @@
       --editor-bg: #020617;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      transition:
+        background-color 0.25s ease,
+        color 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.18s ease;
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--text);
-      background: var(--bg);
+      background-image: var(--bg);
+      background-attachment: fixed;
+      background-size: cover;
       display: flex;
       flex-direction: column;
     }
@@ -64,111 +92,163 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(12px);
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+      background: linear-gradient(
+        90deg,
+        rgba(248, 250, 252, 0.85),
+        rgba(240, 249, 255, 0.9)
+      );
+      backdrop-filter: blur(18px);
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20;
     }
+
     body[data-theme="dark"] header {
-      background: rgba(2, 6, 23, 0.92);
+      background: linear-gradient(
+        90deg,
+        rgba(15, 23, 42, 0.96),
+        rgba(15, 23, 42, 0.9)
+      );
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
+
     .brand-logo {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 999px;
-      background: conic-gradient(from 180deg, #3b82f6, #a855f7, #f97316, #3b82f6);
+      background: conic-gradient(
+        from 160deg,
+        #22b5e6,
+        #f97316,
+        #facc15,
+        #22b5e6
+      );
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35);
+      transform-origin: center;
+      animation: floatIn 700ms ease-out;
     }
-    body[data-theme="dark"] .brand-logo {
-      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.95);
-    }
+
     .brand-logo span {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0b1120;
+      font-family: "Pacifico", cursive;
+      font-size: 20px;
+      color: #f9fafb;
     }
-    .brand-text { display: flex; flex-direction: column; gap: 2px; }
-    .brand-title { font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
-    .brand-subtitle { font-size: 12px; color: var(--text-muted); }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-family: "Pacifico", cursive;
+      font-size: 22px;
+      letter-spacing: 0.03em;
+      color: var(--text);
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       font-size: 13px;
       color: var(--text-muted);
     }
 
     .status-pill {
-      padding: 4px 10px;
+      padding: 3px 10px;
       border-radius: 999px;
-      background: rgba(209, 213, 219, 0.7);
-      border: 1px solid rgba(156, 163, 175, 0.9);
+      background: rgba(226, 232, 240, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.8);
       color: var(--text-muted);
       white-space: nowrap;
     }
+
     body[data-theme="dark"] .status-pill {
-      background: rgba(15, 23, 42, 0.8);
-      border-color: rgba(75, 85, 99, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      border-color: rgba(55, 65, 81, 0.9);
     }
 
-    .btn {
+    .btn,
+    .theme-toggle,
+    .sidebar-toggle {
       border-radius: 999px;
       border: 1px solid var(--accent);
-      background: linear-gradient(135deg, var(--accent-soft), rgba(59, 130, 246, 0.02));
+      background: linear-gradient(135deg, var(--accent-soft), rgba(255, 255, 255, 0.02));
       color: var(--text);
-      padding: 7px 14px;
-      font-size: 13px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      transition: background 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease;
-      box-shadow: var(--shadow-soft);
-      white-space: nowrap;
-    }
-    .btn:hover {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(59, 130, 246, 0.06));
-      transform: translateY(-1px);
-    }
-    .btn:active {
-      transform: translateY(0);
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.35);
-    }
-    .btn-ghost {
-      border-color: var(--border);
-      background: rgba(249, 250, 251, 0.9);
-      box-shadow: none;
-    }
-    body[data-theme="dark"] .btn-ghost {
-      background: rgba(15, 23, 42, 0.9);
-    }
-
-    .theme-toggle {
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      padding: 5px 10px;
-      background: rgba(249, 250, 251, 0.9);
-      cursor: pointer;
+      padding: 7px 12px;
       font-size: 12px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.25);
+      white-space: nowrap;
     }
-    body[data-theme="dark"] .theme-toggle {
+
+    .btn:hover,
+    .theme-toggle:hover,
+    .sidebar-toggle:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(
+        135deg,
+        rgba(34, 181, 230, 0.23),
+        rgba(253, 186, 116, 0.12)
+      );
+    }
+
+    .btn:active,
+    .theme-toggle:active,
+    .sidebar-toggle:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.4);
+    }
+
+    .btn-ghost {
+      border-color: var(--border);
+      background: rgba(248, 250, 252, 0.9);
+      box-shadow: none;
+    }
+
+    body[data-theme="dark"] .btn-ghost {
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .theme-toggle,
+    .sidebar-toggle {
+      border-color: var(--border);
+      background: rgba(248, 250, 252, 0.9);
+      box-shadow: none;
+    }
+
+    body[data-theme="dark"] .theme-toggle,
+    body[data-theme="dark"] .sidebar-toggle {
       background: rgba(15, 23, 42, 0.9);
+    }
+
+    .sidebar-toggle-label {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar-toggle-label {
+        display: inline;
+      }
     }
 
     main {
@@ -176,10 +256,37 @@
       display: grid;
       grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
       gap: 18px;
-      padding: 18px 20px 22px;
+      padding: 16px 16px 20px;
     }
+
+    body.sidebar-hidden main {
+      grid-template-columns: 0 minmax(0, 1fr);
+    }
+
+    body.sidebar-hidden .sidebar-card {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-24px);
+    }
+
     @media (max-width: 800px) {
-      main { grid-template-columns: 1fr; }
+      main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      body.sidebar-hidden main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .sidebar-card {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-bottom: 0;
+        opacity: 0;
+        border-width: 0;
+      }
+      body.sidebar-hidden .sidebar-card {
+        display: none;
+      }
     }
 
     .card {
@@ -190,8 +297,26 @@
       padding: 14px 14px 10px;
       position: relative;
       overflow: hidden;
+      animation: floatIn 650ms ease-out;
     }
-    .card-inner { position: relative; }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at top left,
+        rgba(34, 181, 230, 0.12),
+        transparent 60%
+      );
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
 
     /* Sidebar */
     .sidebar-header {
@@ -200,48 +325,57 @@
       align-items: center;
       margin-bottom: 8px;
     }
+
     .sidebar-title {
       font-size: 14px;
       font-weight: 600;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--text-muted);
     }
+
     .chip {
       font-size: 11px;
       padding: 3px 8px;
       border-radius: 999px;
-      background: rgba(249, 250, 251, 0.9);
+      background: rgba(248, 250, 252, 0.9);
       border: 1px solid var(--border);
       color: var(--text-muted);
     }
+
     body[data-theme="dark"] .chip {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.95);
     }
 
-    .date-picker { margin-bottom: 10px; }
+    .date-picker {
+      margin-bottom: 10px;
+    }
+
     .date-picker label {
       font-size: 12px;
       color: var(--text-muted);
       display: block;
       margin-bottom: 4px;
     }
+
     .date-picker input[type="date"] {
       width: 100%;
       padding: 7px 10px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(249, 250, 251, 0.9);
+      background: rgba(248, 250, 252, 0.95);
       color: var(--text);
       font-size: 13px;
       outline: none;
     }
+
     body[data-theme="dark"] .date-picker input[type="date"] {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.96);
     }
+
     .date-picker input[type="date"]:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+      box-shadow: 0 0 0 1px rgba(34, 181, 230, 0.5);
     }
 
     .entries-list {
@@ -250,37 +384,44 @@
       overflow-y: auto;
       padding-right: 4px;
     }
+
     .entry-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 6px 8px;
       border-radius: 10px;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
       cursor: pointer;
       font-size: 13px;
-      transition: background 0.15s ease, transform 0.08s ease, border 0.15s ease;
       border: 1px solid transparent;
+      background: transparent;
     }
+
     .entry-item:hover {
-      background: rgba(249, 250, 251, 0.9);
+      background: rgba(248, 250, 252, 0.9);
       border-color: var(--border);
       transform: translateY(-1px);
     }
+
     body[data-theme="dark"] .entry-item:hover {
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.98);
     }
+
     .entry-item.active {
-      background: rgba(59, 130, 246, 0.12);
-      border-color: rgba(59, 130, 246, 0.5);
+      background: rgba(34, 181, 230, 0.16);
+      border-color: rgba(34, 181, 230, 0.65);
+      box-shadow: 0 8px 22px rgba(34, 181, 230, 0.18);
     }
+
     .entry-main-label {
-      font-weight: 500;
+      font-weight: 600;
       max-width: 155px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .entry-meta {
       font-size: 11px;
       color: var(--text-muted);
@@ -296,13 +437,23 @@
       gap: 10px;
       margin-bottom: 8px;
     }
+
     .editor-title-group {
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
-    .editor-date { font-size: 14px; font-weight: 600; }
-    .editor-subtitle { font-size: 12px; color: var(--text-muted); }
+
+    .editor-date {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-strong);
+    }
+
+    .editor-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
 
     .editor-actions {
       display: flex;
@@ -311,12 +462,16 @@
       flex-wrap: wrap;
       justify-content: flex-end;
     }
+
     .save-status {
       font-size: 11px;
       color: var(--text-muted);
       white-space: nowrap;
     }
-    .save-status.error { color: var(--danger); }
+
+    .save-status.error {
+      color: var(--danger);
+    }
 
     .entry-tabs {
       display: flex;
@@ -324,21 +479,24 @@
       gap: 6px;
       margin-bottom: 4px;
     }
+
     .entry-pill {
       font-size: 11px;
       padding: 5px 9px;
       border-radius: 999px;
       border: 1px solid var(--border);
       cursor: pointer;
-      background: rgba(249, 250, 251, 0.9);
+      background: rgba(248, 250, 252, 0.9);
       max-width: 140px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     body[data-theme="dark"] .entry-pill {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.95);
     }
+
     .entry-pill.active {
       border-color: var(--accent);
       background: var(--accent-soft);
@@ -351,35 +509,40 @@
       margin-bottom: 8px;
       flex-wrap: wrap;
     }
+
     .title-input {
       flex: 1;
       border-radius: 999px;
       border: 1px solid var(--border);
       padding: 6px 10px;
       font-size: 13px;
-      background: rgba(249, 250, 251, 0.9);
+      background: rgba(248, 250, 252, 0.95);
       color: var(--text);
       outline: none;
     }
+
     body[data-theme="dark"] .title-input {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.96);
     }
+
     .title-input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+      box-shadow: 0 0 0 1px rgba(34, 181, 230, 0.5);
     }
 
     .mood-select {
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(249, 250, 251, 0.9);
+      background: rgba(248, 250, 252, 0.95);
       color: var(--text-muted);
       padding: 4px 8px;
       font-size: 12px;
       outline: none;
     }
+
     body[data-theme="dark"] .mood-select {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.96);
+      color: var(--text-muted);
     }
 
     .editor-body {
@@ -392,14 +555,21 @@
       max-height: calc(100vh - 260px);
       display: flex;
       flex-direction: column;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
     }
+
     .editor-body.full-height {
       height: calc(100vh - 170px);
       max-height: none;
     }
+
     @media (max-width: 800px) {
-      .editor-body { max-height: none; }
-      .editor-body.full-height { height: auto; }
+      .editor-body {
+        max-height: none;
+      }
+      .editor-body.full-height {
+        height: auto;
+      }
     }
 
     .editor-toolbar {
@@ -410,10 +580,11 @@
       border-bottom: 1px dashed var(--border);
       padding-bottom: 4px;
     }
+
     .toolbar-btn {
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(249, 250, 251, 0.9);
+      background: rgba(248, 250, 252, 0.9);
       padding: 3px 8px;
       font-size: 12px;
       cursor: pointer;
@@ -422,13 +593,20 @@
       gap: 4px;
       color: var(--text-muted);
     }
+
     .toolbar-btn:hover {
       background: var(--accent-soft);
       border-color: var(--accent);
       color: var(--text);
     }
+
+    .toolbar-btn.active {
+      border-color: var(--accent);
+      background: rgba(250, 204, 21, 0.25);
+    }
+
     body[data-theme="dark"] .toolbar-btn {
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.96);
     }
 
     .editor-area {
@@ -436,14 +614,16 @@
       overflow-y: auto;
       padding-top: 4px;
     }
+
     .journal-editor {
       min-height: 220px;
       outline: none;
-      font-size: 14px;
-      line-height: 1.6;
+      font-size: 15px;
+      line-height: 1.75;
       color: var(--text);
-      font-family: inherit;
+      font-family: "Nunito", system-ui, -apple-system, sans-serif;
     }
+
     .journal-editor:empty::before {
       content: attr(data-placeholder);
       color: var(--text-muted);
@@ -465,31 +645,50 @@
       cursor: pointer;
       color: var(--accent);
     }
+
+    /* Animations */
+    @keyframes floatIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
   </style>
 </head>
 <body>
 <header>
   <div class="brand">
     <div class="brand-logo">
-      <span>J</span>
+      <span>V</span>
     </div>
     <div class="brand-text">
-      <div class="brand-title">Private Journal</div>
-      <div class="brand-subtitle">All days stored in journal.json</div>
+      <div class="brand-title">VentScript</div>
+      <div class="brand-subtitle">A soft place to vent & journal</div>
     </div>
   </div>
   <div class="header-right">
     <span id="globalStatus" class="status-pill">Offline · not connected</span>
-    <button id="themeToggle" class="theme-toggle" type="button">
-      <span id="themeLabel">Light</span>
+
+    <button id="sidebarToggle" class="sidebar-toggle" type="button">
+      <span class="sidebar-toggle-label">Panel</span> ⇆
     </button>
-    <button id="signinBtn" class="btn" type="button">Sign in with Google</button>
+
+    <button id="themeToggle" class="theme-toggle" type="button">
+      <span id="themeLabel">Dark</span>
+    </button>
+
+    <button id="signinBtn" class="btn" type="button">Sign in</button>
     <button id="signoutBtn" class="btn btn-ghost" type="button" style="display:none;">Sign out</button>
   </div>
 </header>
 
 <main>
-  <section class="card">
+  <!-- SIDEBAR -->
+  <section class="card sidebar-card">
     <div class="card-inner">
       <div class="sidebar-header">
         <span class="sidebar-title">Days</span>
@@ -505,12 +704,13 @@
     </div>
   </section>
 
+  <!-- EDITOR -->
   <section class="card">
     <div class="card-inner">
       <div class="editor-header">
         <div class="editor-title-group">
           <div class="editor-date" id="editorDateLabel">Select a date to begin</div>
-          <div class="editor-subtitle">Each date can have multiple titled entries.</div>
+          <div class="editor-subtitle">Each day can hold multiple soft vents & reflections.</div>
         </div>
         <div class="editor-actions">
           <span id="saveStatus" class="save-status">Offline – not saved</span>
@@ -527,7 +727,7 @@
           id="entryTitleInput"
           class="title-input"
           type="text"
-          placeholder="Entry title (e.g., Evening reflections)"
+          placeholder="Entry title (e.g., Late-night vent, Morning gratitude)"
         />
         <select id="moodSelect" class="mood-select">
           <option value="">Mood</option>
@@ -544,13 +744,26 @@
           <button type="button" class="toolbar-btn" data-cmd="bold"><strong>B</strong></button>
           <button type="button" class="toolbar-btn" data-cmd="italic"><em>I</em></button>
           <button type="button" class="toolbar-btn" data-cmd="underline"><u>U</u></button>
-          <button type="button" class="toolbar-btn" data-cmd="hiliteColor" data-value="#fff59d">
+          <button
+            type="button"
+            class="toolbar-btn"
+            data-cmd="hiliteToggle"
+            data-value="#fff59d"
+          >
             Highlight
           </button>
-          <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList">
+          <button
+            type="button"
+            class="toolbar-btn"
+            data-cmd="insertUnorderedList"
+          >
             • List
           </button>
-          <button type="button" class="toolbar-btn" data-cmd="removeFormat">
+          <button
+            type="button"
+            class="toolbar-btn"
+            data-cmd="removeFormat"
+          >
             Clear
           </button>
         </div>
@@ -560,14 +773,14 @@
             id="journalEditor"
             class="journal-editor"
             contenteditable="true"
-            data-placeholder="Start writing… you can bold, underline, highlight and use lists."
+            data-placeholder="Spill your thoughts… bold them, underline them, highlight the pieces that matter."
           ></div>
         </div>
 
         <div class="editor-footer">
           <div>
-            <span>Tip: </span>
-            <span class="pill-link" id="promptIdea">Need a writing prompt?</span>
+            <span>Prompt: </span>
+            <span class="pill-link" id="promptIdea">Give me something to write about</span>
           </div>
           <div id="entryMetaLabel"></div>
         </div>
@@ -578,7 +791,7 @@
 
 <script>
   // ===== CONFIG =====
- const API_KEY = "AIzaSyCgkQ2GWpKqy-z0eZqmSA0t13QCxm5r9DY";
+  const API_KEY = "AIzaSyCgkQ2GWpKqy-z0eZqmSA0t13QCxm5r9DY";
   const CLIENT_ID = "79019240158-qa38g7i61r4cof05k7i149gs0v2pq8ih.apps.googleusercontent.com";
 
   // Scopes: files you create/edit + basic file contents
@@ -593,7 +806,7 @@
   let gisInited  = false;
 
   let journalFileId = "1Y3JWsc3sA-fR6tJMh9Dy9sy6CweDUJj5";
-  let journalData   = { version: 1, days: [] }; // {date, entries[]}
+  let journalData   = { version: 1, days: [] };
   let currentDateString = null;
   let currentEntryId    = null;
   let autosaveTimer     = null;
@@ -603,6 +816,7 @@
   const saveStatusEl    = document.getElementById("saveStatus");
   const signinBtn       = document.getElementById("signinBtn");
   const signoutBtn      = document.getElementById("signoutBtn");
+  const sidebarToggle   = document.getElementById("sidebarToggle");
   const dateInput       = document.getElementById("dateInput");
   const entriesListEl   = document.getElementById("entriesList");
   const entriesCountEl  = document.getElementById("entriesCount");
@@ -620,7 +834,7 @@
   const themeToggleBtn  = document.getElementById("themeToggle");
   const themeLabel      = document.getElementById("themeLabel");
 
-  // ===== UTIL =====
+  // ==== UTIL ====
   function setGlobalStatus(text, online) {
     globalStatusEl.textContent = text;
     if (online) {
@@ -659,7 +873,8 @@
 
   function applyTheme(theme) {
     document.body.setAttribute("data-theme", theme);
-    themeLabel.textContent = theme === "dark" ? "Dark" : "Light";
+    // Label shows the *other* mode
+    themeLabel.textContent = theme === "dark" ? "Light" : "Dark";
     localStorage.setItem("journalTheme", theme);
   }
 
@@ -809,7 +1024,7 @@
     }
   }
 
-  // ===== DRIVE HELPERS (single journal.json like NoteCards file) =====
+  // ===== DRIVE HELPERS (single journal.json) =====
   async function ensureJournalFile() {
     const cachedId = localStorage.getItem(JOURNAL_FILE_LS_KEY);
     if (cachedId) {
@@ -822,7 +1037,7 @@
           return cachedId;
         }
       } catch (e) {
-        console.warn("Cached journal file not found, will search by name");
+        console.warn("Cached journal file not found, searching by name");
       }
     }
 
@@ -839,7 +1054,7 @@
       return id;
     }
 
-    // create new file if truly missing
+    // create new file
     const createRes = await gapi.client.drive.files.create({
       resource: {
         name: JOURNAL_FILE_NAME,
@@ -874,10 +1089,9 @@
     try {
       data = JSON.parse(res.body);
     } catch (e) {
-      console.warn("journal.json is not valid JSON, resetting", e);
+      console.warn("journal.json invalid JSON, resetting", e);
     }
 
-    // Try to adapt older structures if any
     if (!data || !Array.isArray(data.days)) {
       data = { version: 1, days: [] };
     }
@@ -929,9 +1143,10 @@
   }
 
   function renderDaysList() {
-    const daysSorted = [...journalData.days].sort((a, b) => a.date.localeCompare(b.date)); // chronological
+    const daysSorted = [...journalData.days].sort((a, b) => a.date.localeCompare(b.date));
     entriesListEl.innerHTML = "";
-    entriesCountEl.textContent = `${daysSorted.length} ${daysSorted.length === 1 ? "day" : "days"}`;
+    entriesCountEl.textContent =
+      `${daysSorted.length} ${daysSorted.length === 1 ? "day" : "days"}`;
 
     daysSorted.forEach((day) => {
       const item = document.createElement("div");
@@ -999,13 +1214,13 @@
     const entry = getCurrentEntry();
     if (!entry) {
       entryTitleInput.value = "";
-      moodSelectEl.value = "";
+      moodSelectEl.value   = "";
       journalEditorEl.innerHTML = "";
       entryMetaLabel.textContent = "";
       return;
     }
     entryTitleInput.value = entry.title || "";
-    moodSelectEl.value = entry.mood || "";
+    moodSelectEl.value    = entry.mood || "";
     journalEditorEl.innerHTML = entry.html || "";
 
     const created = new Date(entry.createdAt);
@@ -1038,7 +1253,7 @@
       const entry = createEntryObject();
       day.entries.push(entry);
       currentEntryId = entry.id;
-      editorBodyEl.classList.add("full-height"); // new entry: tall editor
+      editorBodyEl.classList.add("full-height");
     } else {
       currentEntryId = day.entries[0].id;
     }
@@ -1086,24 +1301,59 @@
     }, 8000);
   }
 
-  // ===== RICH TEXT TOOLBAR =====
+  // ===== RICH TEXT TOOLBAR (with highlight toggle) =====
   function handleToolbarClick(e) {
     const btn = e.target.closest(".toolbar-btn");
     if (!btn) return;
+
     const cmd = btn.dataset.cmd;
     const val = btn.dataset.value || null;
+
+    // Toggle highlight separately so it’s reversible
+    if (cmd === "hiliteToggle") {
+      journalEditorEl.focus();
+
+      // Try to detect current highlight color
+      let current = null;
+      try {
+        current = document.queryCommandValue("hiliteColor");
+      } catch (_) {}
+
+      const isHighlighted =
+        current &&
+        (current.toLowerCase() === "rgb(255, 245, 157)" ||
+         current.toLowerCase() === "#fff59d");
+
+      if (isHighlighted) {
+        document.execCommand("hiliteColor", false, "transparent");
+        btn.classList.remove("active");
+      } else {
+        document.execCommand("hiliteColor", false, val || "#fff59d");
+        btn.classList.add("active");
+      }
+
+      scheduleAutosave();
+      return;
+    }
+
     journalEditorEl.focus();
     document.execCommand(cmd, false, val);
+
+    if (cmd === "removeFormat") {
+      const highlightBtn = document.querySelector('[data-cmd="hiliteToggle"]');
+      if (highlightBtn) highlightBtn.classList.remove("active");
+    }
+
     scheduleAutosave();
   }
 
   // ===== PROMPTS =====
   const prompts = [
-    "What is one small moment today that made you smile?",
-    "If you could rewind today and change one thing, what would it be and why?",
-    "What are three things you feel grateful for right now?",
-    "What is sitting heavy on your heart at this moment?",
-    "Describe a tiny detail from today that most people would not notice."
+    "What is one thing you wish you could say out loud but can’t?",
+    "What drained your energy today, and what gently filled it back up?",
+    "If your mood had a weather forecast right now, what would it be?",
+    "Write a letter to yourself five years ago about what you’ve survived.",
+    "What are three tiny wins from today, even if they feel silly?"
   ];
 
   function injectRandomPrompt() {
@@ -1117,17 +1367,32 @@
     scheduleAutosave();
   }
 
+  // ===== PWA: register service worker =====
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("./service-worker.js")
+        .catch((err) => console.warn("SW registration failed", err));
+    });
+  }
+
   // ===== DOM READY =====
   document.addEventListener("DOMContentLoaded", () => {
     // Theme init
     const storedTheme = localStorage.getItem("journalTheme") || "light";
     applyTheme(storedTheme);
+
     themeToggleBtn.addEventListener("click", toggleTheme);
 
-    // Basic offline init for today
+    // Sidebar toggle
+    sidebarToggle.addEventListener("click", () => {
+      document.body.classList.toggle("sidebar-hidden");
+    });
+
+    // Basic local init for today (no gapi calls)
     const today = toISODateString(new Date());
     dateInput.value = today;
-    openDay(today); // purely local, no gapi calls
+    openDay(today);
 
     // Auth buttons
     signinBtn.addEventListener("click", handleSignIn);
@@ -1149,7 +1414,7 @@
       if (!currentDateString) {
         const today = toISODateString(new Date());
         currentDateString = today;
-        dateInput.value = today;
+        dateInput.value   = today;
         editorDateLabel.textContent = formatDisplayDate(today);
       }
       const day = getOrCreateDay(currentDateString);
@@ -1177,7 +1442,11 @@
     moodSelectEl.addEventListener("change", () => {
       scheduleAutosave();
     });
-    document.querySelector(".editor-toolbar").addEventListener("click", handleToolbarClick);
+
+    document
+      .querySelector(".editor-toolbar")
+      .addEventListener("click", handleToolbarClick);
+
     promptIdeaLink.addEventListener("click", injectRandomPrompt);
   });
 </script>
