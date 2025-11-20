@@ -11,6 +11,7 @@
 
 <!-- App icons -->
 <link rel="icon" type="image/svg+xml" href="my-quiet-space-logo.svg" />
+<link rel="icon" type="image/x-icon" href="my-quiet-space-logo.ico" />
 <link rel="favicon" type="image/svg+xml" href="my-quiet-space-logo.svg" />
 <link rel="apple-touch-icon" href="icons/my-quiet-space-192.png" />
 
@@ -1151,7 +1152,7 @@
   }
 
   function renderDaysList() {
-    const daysSorted = [...journalData.days].sort((a, b) => a.date.localeCompare(b.date));
+    const daysSorted = [...journalData.days].sort((a, b) => b.date.localeCompare(a.date));
     entriesListEl.innerHTML = "";
     entriesCountEl.textContent =
       `${daysSorted.length} ${daysSorted.length === 1 ? "day" : "days"}`;
