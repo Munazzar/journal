@@ -1,4 +1,4 @@
-const CACHE_NAME = "ventscript-cache-v1";
+const CACHE_NAME = "my-quiet-space-cache-v1";
 const ASSETS = [
   "./",
   "./index.html",
